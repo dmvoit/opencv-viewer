@@ -17,6 +17,7 @@ class Viewer:
     def __init__(self, path):
         self.paths = self.get_files_names(path)
         self.paths.sort()
+        self.n_paths = len(self.paths)
         cv2.namedWindow(self.WINDOW, cv2.WINDOW_NORMAL | cv2.WINDOW_GUI_EXPANDED)
 
     @staticmethod
@@ -35,12 +36,22 @@ class Viewer:
         else:
             return ""
 
+    def get_current_path(self):
+        return self.paths[self.position]
+
+    def move_to_next_path(self):
+        self.position += 1
+        self.position %= self.n_paths
+
+    # def generate_trackbar(self):
+    #     pass
+
     def img_execute(self):
         pass
 
     def img_show(self):
-        n_paths = len(self.paths)
-        if n_paths < 1:
+
+        if self.n_paths < 1:
             return
 
         if hasattr(self, 'PARAMS'):
@@ -53,20 +64,18 @@ class Viewer:
                                        getattr(self, method_name))
 
         while True:
-            self.img = cv2.imread(self.paths[self.position])
+            self.img = cv2.imread(self.get_current_path())
             self.img = cv2.resize(self.img, None, fx=0.50, fy=0.50, interpolation=cv2.INTER_AREA)
 
             cv2.imshow(self.WINDOW, self.img)
             cv2.resizeWindow(self.WINDOW, int(self.img.shape[1] / 1), int(self.img.shape[0] / 1))
-            cv2.setWindowTitle(self.WINDOW, self.paths[self.position])
+            cv2.setWindowTitle(self.WINDOW, self.get_current_path())
             self.img_execute()
 
             key = cv2.waitKey(0)
             if key & 0xFF == ord('q'):
                 break
             elif key & 0xFF == ord('+'):
-                self.position += 1
-                self.position %= n_paths
-                # print(f"{self.paths[self.position]}")
+                self.move_to_next_path()
                 continue
         cv2.destroyAllWindows()
