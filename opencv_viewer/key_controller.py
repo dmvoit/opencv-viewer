@@ -2,12 +2,14 @@ import cv2
 import numpy as np
 
 
-def _covert_cahr_to_int_decorator(func):
+def _covert_char_to_int_decorator(func):
     def wrapper(*args):
         if isinstance(args[1], int):
-            return func(args[0], args[1])
+            return func(*args)
         elif isinstance(args[1], str):
-            return func(args[0], ord(args[1]))
+            ar = list(args)
+            ar[1] = ord(args[1])
+            return func(*tuple(ar))
         else:
             return False
 
@@ -18,9 +20,9 @@ class KeyController:
 
     def __init__(self):
         self.key_registry = dict()
+        self.option_registry = dict()
 
-
-    @_covert_cahr_to_int_decorator
+    @_covert_char_to_int_decorator
     def key_pressed(self, input):
         if hasattr(self, 'key') and self.key & 0xFF == input:
             self.key = -1  # resets key
@@ -28,7 +30,7 @@ class KeyController:
         else:
             return False
 
-    @_covert_cahr_to_int_decorator
+    @_covert_char_to_int_decorator
     def key_check(self, input):
 
         if input not in self.key_registry:
@@ -45,14 +47,32 @@ class KeyController:
             # last state
             return self.key_registry[input]
 
-    def wait(self):
-        self.key = cv2.waitKey(0)
+    @_covert_char_to_int_decorator
+    def key_option(self, input, options):
+
+        if input not in self.option_registry:
+            self.option_registry[input] = {'len': len(options), 'pos': 0}
+
+        if self.key == input:
+            state = self.option_registry[input]
+
+            state['pos'] += 1
+            state['pos'] %= state['len']
+
+            return options[self.option_registry[input]['pos']]
+        else:
+            # last state
+            return options[self.option_registry[input]['pos']]
+
+    def wait(self, time=0):
+        self.key = cv2.waitKey(time)
 
     def test_wait(self):
 
         while True:
             cv2.imshow('w', np.zeros((100, 100)))
-            self.key = cv2.waitKey(100)
+            # self.key = cv2.waitKey(-1)
+            self.wait(100)
 
             if self.key_pressed(32):
                 print('press space')
@@ -62,8 +82,8 @@ class KeyController:
                 print('checked')
             else:
                 print(self.key)
+                # print(self.key_option('o',['ap','bd','re']))
                 # self._verify_key(1)
-                # None
             if self.key_pressed('q'):
                 break
         cv2.destroyAllWindows()
