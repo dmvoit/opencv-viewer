@@ -44,8 +44,15 @@ class Viewer:
         self.position += 1
         self.position %= self.n_paths
 
-    # def generate_trackbar(self):
-    #     pass
+    def generate_trackbar(self):
+        if hasattr(self, 'PARAMS'):
+            params = getattr(self, 'PARAMS')
+            for method_name in dir(self):
+                if method_name.startswith("on_trackbar"):
+                    var_name = method_name.split('_')[-1]
+                    cv2.createTrackbar(var_name, self.WINDOW,
+                                       params[var_name]['val'], params[var_name]['max'],
+                                       getattr(self, method_name))
 
     def key_pressed(self, char):
         if hasattr(self, 'key') and self.key & 0xFF == ord(char):
@@ -59,16 +66,10 @@ class Viewer:
     def img_show(self):
 
         if self.n_paths < 1:
+            print('no images found')
             return
 
-        if hasattr(self, 'PARAMS'):
-            params = getattr(self, 'PARAMS')
-            for method_name in dir(self):
-                if method_name.startswith("on_trackbar"):
-                    var_name = method_name.split('_')[-1]
-                    cv2.createTrackbar(var_name, self.WINDOW,
-                                       params[var_name]['val'], params[var_name]['max'],
-                                       getattr(self, method_name))
+        self.generate_trackbar()
 
         while True:
             self.img = cv2.imread(self.get_position_path())
@@ -80,11 +81,11 @@ class Viewer:
             self.img_execute()
 
             self.key = cv2.waitKey(0)
-            if self.key & 0xFF == ord('q'):  # quit application
+            if self.key_pressed('q'):  # quit application
                 break
-            elif self.key & 0xFF == ord('r'):  # reload image
+            elif self.key_pressed('r'):  # reload image
                 continue
-            elif self.key & 0xFF == ord('+'):  # next image
+            elif self.key_pressed('+'):  # next image
                 self.move_to_next_path()
                 continue
         cv2.destroyAllWindows()
