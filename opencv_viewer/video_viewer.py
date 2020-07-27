@@ -20,6 +20,18 @@ class VideoViewer(Viewer):
     FRAME_COUNT = 0
     FRAME_POS = 0
     VIDEO_ENDED = False
+    PLAY = True
+
+    def set_window_title(self, path=None, data=''):
+        if path is None:
+            path = self.get_file_name(self.get_position_path())
+        title = f'frame: {int(self.FRAME_POS):010}\t{path}  {data}'
+        cv2.setWindowTitle(self.WINDOW, title)
+
+    def resizeWindow(self, factor=1.0):
+        if hasattr(self, 'FRAME') and self.FRAME is not None:
+            w, h, c = np.shape(self.FRAME)
+            cv2.resizeWindow(self.WINDOW, int(h * factor), int(w * factor))
 
     def play_video(self):
         cap = cv2.VideoCapture(self.paths[0])
@@ -68,19 +80,15 @@ class VideoViewer(Viewer):
             if ret:
                 w, h, c = np.shape(self.FRAME)
                 cv2.imshow(self.WINDOW, self.FRAME)
-                factor = 2
-                cv2.resizeWindow(self.WINDOW, int(h/ factor), int(w / factor))
-                cv2.setWindowTitle(self.WINDOW, self.get_position_path())
+                self.resizeWindow(factor=0.5)
+                self.set_window_title()
                 self.img_execute()
 
             self.key = cv2.waitKey(1)
             if self.key_pressed('q'):  # quit application
                 break
-            elif self.key_pressed('p') or self.key_pressed(32) :
-                cv2.waitKey(-1)
-            elif self.key_pressed('r'):
+            elif self.key_controller.key_pressed('r'): # restart
                 self.FRAME_LAST = None
-                self.FRAME = None
                 cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
             else:
                 continue
