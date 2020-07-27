@@ -36,8 +36,8 @@ class Viewer:
         else:
             return ""
 
-    def get_current_path(self):
-        return self.paths[self.position]
+    def get_position_path(self, offset=0):
+        return self.paths[self.position + offset]
 
     def move_to_next_path(self):
         self.position += 1
@@ -64,12 +64,12 @@ class Viewer:
                                        getattr(self, method_name))
 
         while True:
-            self.img = cv2.imread(self.get_current_path())
+            self.img = cv2.imread(self.get_position_path())
             self.img = cv2.resize(self.img, None, fx=0.50, fy=0.50, interpolation=cv2.INTER_AREA)
 
             cv2.imshow(self.WINDOW, self.img)
             cv2.resizeWindow(self.WINDOW, int(self.img.shape[1] / 1), int(self.img.shape[0] / 1))
-            cv2.setWindowTitle(self.WINDOW, self.get_current_path())
+            cv2.setWindowTitle(self.WINDOW, self.get_position_path())
             self.img_execute()
 
             key = cv2.waitKey(0)
