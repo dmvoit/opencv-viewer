@@ -2,48 +2,39 @@ import cv2
 import numpy as np
 
 
+def _covert_cahr_to_int_decorator(func):
+    def wrapper(*args):
+        if isinstance(args[1], int):
+            return func(args[0], args[1])
+        elif isinstance(args[1], str):
+            return func(args[0], ord(args[1]))
+        else:
+            return False
+
+    return wrapper
+
+
 class KeyController:
 
     def __init__(self):
         self.key_registry = dict()
 
-    def _verify_key(self, input):
-        """
 
-        :param input:
-        :return: ( isVerified [bool], value [int])
-        """
-        if isinstance(input, str) and len(input) == 1:
-            return True, ord(input)
-        elif isinstance(input, int):
-            return True, input
-        else:
-            return False, 0
-
+    @_covert_cahr_to_int_decorator
     def key_pressed(self, input):
-
-        is_verified, press = self._verify_key(input)
-        if not is_verified:
-            return False
-
-        if hasattr(self, 'key') and self.key & 0xFF == press:
+        if hasattr(self, 'key') and self.key & 0xFF == input:
             self.key = -1  # resets key
             return True
         else:
             return False
 
-    def _init_registry(self, input):
+    @_covert_cahr_to_int_decorator
+    def key_check(self, input):
+
         if input not in self.key_registry:
             self.key_registry[input] = False
 
-    def key_check(self, input):
-        is_verified, key_num = self._verify_key(input)
-        if not is_verified:
-            return False
-
-        self._init_registry(input)
-
-        if self.key == key_num:
+        if self.key == input:
             state = self.key_registry[input]
             self.key_registry[input] = not state
             if state:
@@ -62,10 +53,17 @@ class KeyController:
         while True:
             cv2.imshow('w', np.zeros((100, 100)))
             self.key = cv2.waitKey(100)
+
+            if self.key_pressed(32):
+                print('press space')
+                self.key = -1
+
             if self.key_check('m'):
                 print('checked')
             else:
                 print(self.key)
+                # self._verify_key(1)
+                # None
             if self.key_pressed('q'):
                 break
         cv2.destroyAllWindows()
