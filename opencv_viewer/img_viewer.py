@@ -11,6 +11,7 @@ class Viewer:
     COLOR_CYAN = (255, 255, 0)
     COLOR_MAGENTA = (255, 0, 255)
     COLOR_WHITE = (255, 255, 255)
+    COLOR_BLACK = (0, 0, 0)
 
     position = 0
 
@@ -72,10 +73,12 @@ class Viewer:
             cv2.setWindowTitle(self.WINDOW, self.get_position_path())
             self.img_execute()
 
-            key = cv2.waitKey(0)
-            if key & 0xFF == ord('q'):
+            self.key = cv2.waitKey(0)
+            if self.key & 0xFF == ord('q'):  # quit application
                 break
-            elif key & 0xFF == ord('+'):
+            elif self.key & 0xFF == ord('r'):  # reload image
+                continue
+            elif self.key & 0xFF == ord('+'):  # next image
                 self.move_to_next_path()
                 continue
         cv2.destroyAllWindows()
