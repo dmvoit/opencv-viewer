@@ -47,6 +47,12 @@ class Viewer:
     # def generate_trackbar(self):
     #     pass
 
+    def key_pressed(self, char):
+        if hasattr(self, 'key') and self.key & 0xFF == ord(char):
+            return True
+        else:
+            return False
+
     def img_execute(self):
         pass
 
