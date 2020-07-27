@@ -69,23 +69,26 @@ class VideoViewer(Viewer):
         self.FRAME_COUNT = cap.get(cv2.CAP_PROP_FRAME_COUNT)
 
         while True:
-            if self.FRAME is not None:
+            self.FRAME_POS = cap.get(cv2.CAP_PROP_POS_FRAMES)
+            if self.FRAME_POS > 0:
                 self.FRAME_LAST = self.FRAME
 
-            ret, self.FRAME = cap.read()
-            self.FRAME_POS = cap.get(cv2.CAP_PROP_POS_FRAMES)
+            if self.PLAY:
+                ret, self.FRAME = cap.read()
 
             time.sleep(0.05)
 
-            if ret:
-                w, h, c = np.shape(self.FRAME)
+            if self.FRAME is not None:
                 cv2.imshow(self.WINDOW, self.FRAME)
                 self.resizeWindow(factor=0.5)
                 self.set_window_title()
                 self.img_execute()
 
-            self.key = cv2.waitKey(1)
-            if self.key_pressed('q'):  # quit application
+            self.key_controller.wait(time=1)
+
+            self.PLAY = not self.key_controller.key_check(32) # pause with space
+
+            if self.key_controller.key_pressed('q'):  # quit application
                 break
             elif self.key_controller.key_pressed('r'): # restart
                 self.FRAME_LAST = None
