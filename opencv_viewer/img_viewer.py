@@ -3,7 +3,7 @@ import os
 
 
 class Viewer:
-    WINDOW = "window"
+    WINDOW = "opencv_viewer"
 
     COLOR_GREEN = (0, 255, 0)
     COLOR_RED = (0, 0, 255)
@@ -40,8 +40,19 @@ class Viewer:
     def get_position_path(self, offset=0):
         return self.paths[self.position + offset]
 
+    @staticmethod
+    def get_file_name(path):
+        return path.split('/')[-1]
+
+    def position_counter(self):
+        return f'[{self.position + 1:03}/{self.n_paths:03}]'
+
     def move_to_next_path(self):
         self.position += 1
+        self.position %= self.n_paths
+
+    def move_to_prev_path(self):
+        self.position -= 1
         self.position %= self.n_paths
 
     def generate_trackbar(self):
@@ -64,12 +75,19 @@ class Viewer:
     def img_execute(self):
         pass
 
+    def pre_execute(self):
+        pass
+
+    def post_execute(self):
+        pass
+
     def img_show(self):
 
         if self.n_paths < 1:
             print('no images found')
             return
 
+        self.pre_execute()
         self.generate_trackbar()
 
         while True:
@@ -77,8 +95,10 @@ class Viewer:
             self.img = cv2.resize(self.img, None, fx=0.50, fy=0.50, interpolation=cv2.INTER_AREA)
 
             cv2.imshow(self.WINDOW, self.img)
-            cv2.resizeWindow(self.WINDOW, int(self.img.shape[1] / 1), int(self.img.shape[0] / 1))
-            cv2.setWindowTitle(self.WINDOW, self.get_position_path())
+            self.resizeWindow(factor=0.5)
+
+            # TODO add counter
+            cv2.setWindowTitle(self.WINDOW, self.get_file_name(self.get_position_path()))
             self.img_execute()
 
             self.key = cv2.waitKey(0)
@@ -89,4 +109,9 @@ class Viewer:
             elif self.key_pressed('+'):  # next image
                 self.move_to_next_path()
                 continue
+            elif self.key_pressed('-'):  # next image
+                self.move_to_prev_path()
+                continue
+
+        self.post_execute()
         cv2.destroyAllWindows()
