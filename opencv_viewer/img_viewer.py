@@ -56,6 +56,7 @@ class Viewer:
 
     def key_pressed(self, char):
         if hasattr(self, 'key') and self.key & 0xFF == ord(char):
+            self.key = -1  # resets key
             return True
         else:
             return False
