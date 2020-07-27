@@ -18,6 +18,7 @@ class VideoViewer(Viewer):
     FRAME_LAST = None
     FRAME = None
     FRAME_COUNT = 0
+    FRAME_POS = 0
     VIDEO_ENDED = False
 
     def play_video(self):
@@ -30,7 +31,6 @@ class VideoViewer(Viewer):
         self.FRAME_COUNT = cap.get(cv2.CAP_PROP_FRAME_COUNT)
 
         if cap.isOpened():
-            # cap.get(cv2.CAP_PROP_)
             if self.FRAME is not None:
                 self.FRAME_LAST = self.FRAME
             ret, self.FRAME = cap.read()
@@ -61,6 +61,7 @@ class VideoViewer(Viewer):
                 self.FRAME_LAST = self.FRAME
 
             ret, self.FRAME = cap.read()
+            self.FRAME_POS = cap.get(cv2.CAP_PROP_POS_FRAMES)
 
             time.sleep(0.05)
 
@@ -75,7 +76,7 @@ class VideoViewer(Viewer):
             self.key = cv2.waitKey(1)
             if self.key_pressed('q'):  # quit application
                 break
-            elif self.key_pressed('p'):
+            elif self.key_pressed('p') or self.key_pressed(32) :
                 cv2.waitKey(-1)
             elif self.key_pressed('r'):
                 self.FRAME_LAST = None
