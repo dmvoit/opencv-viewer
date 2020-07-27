@@ -64,6 +64,8 @@ class Viewer:
                     cv2.createTrackbar(var_name, self.WINDOW,
                                        params[var_name]['val'], params[var_name]['max'],
                                        getattr(self, method_name))
+                if method_name.startswith("on_mouse"):
+                    cv2.setMouseCallback(self.WINDOW, getattr(self, method_name))
 
     def key_pressed(self, char):
         if hasattr(self, 'key') and self.key & 0xFF == ord(char):
@@ -71,6 +73,17 @@ class Viewer:
             return True
         else:
             return False
+
+
+    def wait(self):
+        self.key = cv2.waitKey(0)
+
+    def resize(self, img, factor=0.5):
+        return cv2.resize(img, None, fx=factor, fy=factor, interpolation=cv2.INTER_AREA)
+
+    def resizeWindow(self, factor=1.0):
+        if hasattr(self, 'img'):
+            cv2.resizeWindow(self.WINDOW, int(self.img.shape[1] * factor), int(self.img.shape[0] * factor))
 
     def img_execute(self):
         pass
@@ -92,7 +105,7 @@ class Viewer:
 
         while True:
             self.img = cv2.imread(self.get_position_path())
-            self.img = cv2.resize(self.img, None, fx=0.50, fy=0.50, interpolation=cv2.INTER_AREA)
+            self.img = self.resize(self.img)
 
             cv2.imshow(self.WINDOW, self.img)
             self.resizeWindow(factor=0.5)
@@ -101,7 +114,7 @@ class Viewer:
             cv2.setWindowTitle(self.WINDOW, self.get_file_name(self.get_position_path()))
             self.img_execute()
 
-            self.key = cv2.waitKey(0)
+            self.wait()
             if self.key_pressed('q'):  # quit application
                 break
             elif self.key_pressed('r'):  # reload image
