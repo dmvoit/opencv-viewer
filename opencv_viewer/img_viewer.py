@@ -1,3 +1,4 @@
+from opencv_viewer.key_controller import KeyController
 import cv2
 import os
 
@@ -19,6 +20,8 @@ class Viewer:
         self.paths = self.get_files_names(path)
         self.paths.sort()
         self.n_paths = len(self.paths)
+
+        self.key_controller = KeyController()
         cv2.namedWindow(self.WINDOW, cv2.WINDOW_NORMAL | cv2.WINDOW_GUI_EXPANDED)
 
     @staticmethod
@@ -47,6 +50,15 @@ class Viewer:
     def position_counter(self):
         return f'[{self.position + 1:03}/{self.n_paths:03}]'
 
+    def set_window_title(self, path=None, data=''):
+
+        counter = self.position_counter()
+
+        if path is None:
+            path = self.get_file_name(self.get_position_path())
+        title = f'{counter} {path}  {data}'
+        cv2.setWindowTitle(self.WINDOW, title)
+
     def move_to_next_path(self):
         self.position += 1
         self.position %= self.n_paths
@@ -67,16 +79,6 @@ class Viewer:
                 if method_name.startswith("on_mouse"):
                     cv2.setMouseCallback(self.WINDOW, getattr(self, method_name))
 
-    def key_pressed(self, char):
-        if hasattr(self, 'key') and self.key & 0xFF == ord(char):
-            self.key = -1  # resets key
-            return True
-        else:
-            return False
-
-
-    def wait(self):
-        self.key = cv2.waitKey(0)
 
     def resize(self, img, factor=0.5):
         return cv2.resize(img, None, fx=factor, fy=factor, interpolation=cv2.INTER_AREA)
@@ -110,19 +112,18 @@ class Viewer:
             cv2.imshow(self.WINDOW, self.img)
             self.resizeWindow(factor=0.5)
 
-            # TODO add counter
-            cv2.setWindowTitle(self.WINDOW, self.get_file_name(self.get_position_path()))
+            self.set_window_title()
             self.img_execute()
 
-            self.wait()
-            if self.key_pressed('q'):  # quit application
+            self.key_controller.wait()
+            if self.key_controller.key_pressed('q'):  # quit application
                 break
-            elif self.key_pressed('r'):  # reload image
+            elif self.key_controller.key_pressed('r'):  # reload image
                 continue
-            elif self.key_pressed('+'):  # next image
+            elif self.key_controller.key_pressed('+'):  # next image
                 self.move_to_next_path()
                 continue
-            elif self.key_pressed('-'):  # next image
+            elif self.key_controller.key_pressed('-'):  # next image
                 self.move_to_prev_path()
                 continue
 
