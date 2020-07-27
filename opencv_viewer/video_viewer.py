@@ -33,25 +33,6 @@ class VideoViewer(Viewer):
             w, h, c = np.shape(self.FRAME)
             cv2.resizeWindow(self.WINDOW, int(h * factor), int(w * factor))
 
-    def play_video(self):
-        cap = cv2.VideoCapture(self.paths[0])
-
-        if (cap.isOpened() == False):
-            print("Error opening video stream or file")
-            sys.exit()
-
-        self.FRAME_COUNT = cap.get(cv2.CAP_PROP_FRAME_COUNT)
-
-        if cap.isOpened():
-            if self.FRAME is not None:
-                self.FRAME_LAST = self.FRAME
-            ret, self.FRAME = cap.read()
-            print(ret)
-            yield ret
-        else:
-            cap.release()
-            self.VIDEO_ENDED = True
-            yield False
 
     def vid_show(self):
 
