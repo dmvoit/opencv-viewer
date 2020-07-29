@@ -5,7 +5,7 @@ video = True
 
 if __name__ == '__main__':
     if video:
-        path = 'media/video/VID_20200629_123454.mp4'
+        path = 'media/video/'
 
         video_viewer = VideoViewer(path)
         video_viewer.vid_show()

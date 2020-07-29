@@ -9,11 +9,14 @@ import time
 class VideoViewer(Viewer):
 
     @staticmethod
-    def get_files_names(vid_file):
-        path = pathlib.PosixPath(vid_file)
-        if path.is_file() and path.suffix in ['.mp4', '.mp4']:
-            return [vid_file]
-        return ['']
+    def get_files_names(root):
+        path = pathlib.PosixPath(root)
+        if path.is_file() and path.suffix in ['.mp4']:
+            return [str(path)]
+        file_paths = []
+        for file in path.glob('*.mp4'):
+            file_paths.append(str(file))
+        return file_paths
 
     FRAME_LAST = None
     FRAME = None
@@ -21,11 +24,13 @@ class VideoViewer(Viewer):
     FRAME_POS = 0
     VIDEO_ENDED = False
     PLAY = True
+    EXIT = False
 
     def set_window_title(self, path=None, data=''):
         if path is None:
             path = self.get_file_name(self.get_position_path())
-        title = f'frame: {int(self.FRAME_POS):010}\t{path}  {data}'
+        counter = self.position_counter()
+        title = f'{counter} frame: {int(self.FRAME_POS):010}\t{path}  {data}'
         cv2.setWindowTitle(self.WINDOW, title)
 
     def resizeWindow(self, factor=1.0):
@@ -33,49 +38,70 @@ class VideoViewer(Viewer):
             w, h, c = np.shape(self.FRAME)
             cv2.resizeWindow(self.WINDOW, int(h * factor), int(w * factor))
 
-
     def vid_show(self):
 
-        if self.paths == ['']:
+        if len(self.paths) == 0:
             print('file not found')
             return
 
         self.generate_trackbar()
 
-        cap = cv2.VideoCapture(self.paths[0])
-        if (cap.isOpened() == False):
-            print("Error opening video stream or file")
-            sys.exit()
-
-        self.FRAME_COUNT = cap.get(cv2.CAP_PROP_FRAME_COUNT)
-
         while True:
-            self.FRAME_POS = cap.get(cv2.CAP_PROP_POS_FRAMES)
-            if self.FRAME_POS > 0:
-                self.FRAME_LAST = self.FRAME
+            cap = cv2.VideoCapture(self.get_position_path())
+            if (cap.isOpened() == False):
+                print(f"Error opening {self.get_position_path()}")
+                cv2.destroyAllWindows()
+                sys.exit()
 
-            if self.PLAY:
-                ret, self.FRAME = cap.read()
+            self.FRAME_COUNT = cap.get(cv2.CAP_PROP_FRAME_COUNT)
 
-            time.sleep(0.05)
+            while True:
+                self.FRAME_POS = cap.get(cv2.CAP_PROP_POS_FRAMES)
+                if self.FRAME_POS > 0:
+                    self.FRAME_LAST = self.FRAME
 
-            if self.FRAME is not None:
-                cv2.imshow(self.WINDOW, self.FRAME)
-                self.resizeWindow(factor=0.5)
-                self.set_window_title()
-                self.img_execute()
+                if self.PLAY:
+                    ret, self.FRAME = cap.read()
 
-            self.key_controller.wait(time=1)
+                time.sleep(0.05)
 
-            self.PLAY = not self.key_controller.key_check(32) # pause with space
+                if self.FRAME is not None:
+                    cv2.imshow(self.WINDOW, self.FRAME)
+                    self.resizeWindow(factor=0.5)
+                    self.set_window_title()
+                    self.img_execute()
 
-            if self.key_controller.key_pressed('q'):  # quit application
+                self.key_controller.wait(time=1)
+
+                self.PLAY = not self.key_controller.key_check(32)  # pause with space
+
+                if self.key_controller.key_pressed('q'):  # quit application
+                    self.EXIT = True
+                    break
+                elif self.key_controller.key_pressed(83):  # next video arrow ->
+                    self.move_to_next_path()
+                    break
+                elif self.key_controller.key_pressed(81):  # prev video arrow <-
+                    self.move_to_prev_path()
+                    break
+                elif self.key_controller.key_pressed('+') and not self.PLAY:
+                    self.PLAY = True
+                elif self.key_controller.key_pressed('-') and not self.PLAY:
+                    if self.FRAME_POS != 0:
+                        cap.set(cv2.CAP_PROP_POS_FRAMES, self.FRAME_POS-2)
+                        self.PLAY = True
+                elif self.key_controller.key_pressed('r'):  # restart
+                    self.FRAME_LAST = None
+                    cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                    self.PLAY = True
+                else:
+                    continue
+
+            self.FRAME_POS = 0
+            self.FRAME_LAST = None
+
+            cap.release()
+
+            if self.EXIT is True:
                 break
-            elif self.key_controller.key_pressed('r'): # restart
-                self.FRAME_LAST = None
-                cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
-            else:
-                continue
-
-        cap.release()
         cv2.destroyAllWindows()
