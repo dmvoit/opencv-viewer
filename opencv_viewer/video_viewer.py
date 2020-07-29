@@ -25,6 +25,7 @@ class VideoViewer(Viewer):
     VIDEO_ENDED = False
     PLAY = True
     EXIT = False
+    DEFAULT_FACTOR = 0.5
 
     def set_window_title(self, path=None, data=''):
         if path is None:
@@ -67,7 +68,7 @@ class VideoViewer(Viewer):
 
                 if self.FRAME is not None:
                     cv2.imshow(self.WINDOW, self.FRAME)
-                    self.resizeWindow(factor=0.5)
+                    self.resizeWindow(factor=self.DEFAULT_FACTOR)
                     self.set_window_title()
                     self.img_execute()
 
@@ -80,10 +81,16 @@ class VideoViewer(Viewer):
                     break
                 elif self.key_controller.key_pressed(83):  # next video arrow ->
                     self.move_to_next_path()
+                    self.PLAY = True
                     break
                 elif self.key_controller.key_pressed(81):  # prev video arrow <-
                     self.move_to_prev_path()
+                    self.PLAY = True
                     break
+                elif self.key_controller.key_pressed(82):
+                    self.DEFAULT_FACTOR += 0.1
+                elif self.key_controller.key_pressed(84):
+                    self.DEFAULT_FACTOR -= 0.1
                 elif self.key_controller.key_pressed('+') and not self.PLAY:
                     self.PLAY = True
                 elif self.key_controller.key_pressed('-') and not self.PLAY:
