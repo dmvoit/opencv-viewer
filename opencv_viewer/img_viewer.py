@@ -15,6 +15,7 @@ class Viewer:
     COLOR_BLACK = (0, 0, 0)
 
     position = 0
+    DEFAULT_FACTOR = 0.5
 
     def __init__(self, path):
         self.paths = self.get_files_names(path)
@@ -98,7 +99,9 @@ class Viewer:
     def resize(self, img, factor=0.5):
         return cv2.resize(img, None, fx=factor, fy=factor, interpolation=cv2.INTER_AREA)
 
-    def resizeWindow(self, factor=1.0):
+    def resizeWindow(self, factor=None):
+        if factor is None:
+            factor = self.DEFAULT_FACTOR
         if hasattr(self, 'img'):
             cv2.resizeWindow(self.WINDOW, int(self.img.shape[1] * factor), int(self.img.shape[0] * factor))
 
@@ -125,7 +128,7 @@ class Viewer:
             self.img = self.resize(self.img)
 
             cv2.imshow(self.WINDOW, self.img)
-            self.resizeWindow(factor=0.5)
+            self.resizeWindow()
 
             self.set_window_title()
             self.img_execute()
@@ -138,6 +141,10 @@ class Viewer:
             elif self.key_controller.key_pressed('+'):  # next image
                 self.move_to_next_path()
                 continue
+            elif self.key_controller.key_pressed(82):
+                self.DEFAULT_FACTOR += 0.1
+            elif self.key_controller.key_pressed(84):
+                self.DEFAULT_FACTOR -= 0.1
             elif self.key_controller.key_pressed('-'):  # next image
                 self.move_to_prev_path()
                 continue

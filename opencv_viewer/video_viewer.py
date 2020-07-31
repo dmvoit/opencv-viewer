@@ -20,7 +20,6 @@ class VideoViewer(Viewer):
     VIDEO_ENDED = False
     PLAY = True
     EXIT = False
-    DEFAULT_FACTOR = 0.5
 
     def set_window_title(self, path=None, data=''):
         if path is None:
@@ -29,10 +28,12 @@ class VideoViewer(Viewer):
         title = f'{counter} frame: {int(self.FRAME_POS):010}\t{path}  {data}'
         cv2.setWindowTitle(self.WINDOW, title)
 
-    def resizeWindow(self, factor=1.0):
+    def resizeWindow(self, factor=None):
+        if factor is None:
+            factor = self.DEFAULT_FACTOR
         if hasattr(self, 'FRAME') and self.FRAME is not None:
-            w, h, c = np.shape(self.FRAME)
-            cv2.resizeWindow(self.WINDOW, int(h * factor), int(w * factor))
+            shape = np.shape(self.FRAME)
+            cv2.resizeWindow(self.WINDOW, int(shape[1] * factor), int(shape[0] * factor))
 
     def vid_show(self):
 
@@ -63,7 +64,7 @@ class VideoViewer(Viewer):
 
                 if self.FRAME is not None:
                     cv2.imshow(self.WINDOW, self.FRAME)
-                    self.resizeWindow(factor=self.DEFAULT_FACTOR)
+                    self.resizeWindow()
                     self.set_window_title()
                     self.img_execute()
 
