@@ -1,5 +1,4 @@
 from opencv_viewer.img_viewer import Viewer
-import pathlib
 import cv2
 import sys
 import numpy as np
@@ -9,14 +8,10 @@ import time
 class VideoViewer(Viewer):
 
     @staticmethod
-    def get_files_names(root):
-        path = pathlib.PosixPath(root)
-        if path.is_file() and path.suffix in ['.mp4']:
-            return [str(path)]
-        file_paths = []
-        for file in path.glob('*.mp4'):
-            file_paths.append(str(file))
-        return file_paths
+    def get_files_names(root, suffix=None):
+        if suffix is None:
+            suffix = ['mp4']
+        return Viewer.get_files_names(root, suffix)
 
     FRAME_LAST = None
     FRAME = None
@@ -41,7 +36,7 @@ class VideoViewer(Viewer):
 
     def vid_show(self):
 
-        if len(self.paths) == 0:
+        if self.n_paths < 0:
             print('file not found')
             return
 
@@ -95,7 +90,7 @@ class VideoViewer(Viewer):
                     self.PLAY = True
                 elif self.key_controller.key_pressed('-') and not self.PLAY:
                     if self.FRAME_POS != 0:
-                        cap.set(cv2.CAP_PROP_POS_FRAMES, self.FRAME_POS-2)
+                        cap.set(cv2.CAP_PROP_POS_FRAMES, self.FRAME_POS - 2)
                         self.PLAY = True
                 elif self.key_controller.key_pressed('r'):  # restart
                     self.FRAME_LAST = None

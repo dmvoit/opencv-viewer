@@ -1,6 +1,6 @@
 from opencv_viewer.key_controller import KeyController
 import cv2
-import os
+import pathlib
 
 
 class Viewer:
@@ -25,12 +25,25 @@ class Viewer:
         cv2.namedWindow(self.WINDOW, cv2.WINDOW_NORMAL | cv2.WINDOW_GUI_EXPANDED)
 
     @staticmethod
-    def get_files_names(root_dir):
-        file_paths = []
+    def get_files_names(root, suffix=None):
+        if suffix is None:
+            suffix = ['jpg', 'png']
 
-        for file in os.listdir(root_dir):
-            if file.endswith(tuple(['.JPG', '.jpg', '.PNG', '.png'])):
-                file_paths.append(f"{root_dir}/{file}")
+        suffix = [ext if ext.startswith('.') else '.' + ext for ext in suffix]
+        suffix_upper = [ext.upper() for ext in suffix]
+        suffix = list(set(suffix).union(set(suffix_upper)))
+
+        path = pathlib.Path(root)
+        if path.is_file() and path.suffix in suffix:
+            return [str(path)]
+
+        if not path.is_dir():
+            return []
+
+        file_paths = []
+        for ext in suffix:
+            for file in path.glob('*' + ext):
+                file_paths.append(str(file))
         return file_paths
 
     def get_param_str(self):
@@ -48,7 +61,10 @@ class Viewer:
         return path.split('/')[-1]
 
     def position_counter(self):
-        return f'[{self.position + 1:03}/{self.n_paths:03}]'
+        if self.n_paths > 1:
+            return f'[{self.position + 1:03}/{self.n_paths:03}]'
+        else:
+            return ''
 
     def set_window_title(self, path=None, data=''):
 
@@ -78,7 +94,6 @@ class Viewer:
                                        getattr(self, method_name))
                 if method_name.startswith("on_mouse"):
                     cv2.setMouseCallback(self.WINDOW, getattr(self, method_name))
-
 
     def resize(self, img, factor=0.5):
         return cv2.resize(img, None, fx=factor, fy=factor, interpolation=cv2.INTER_AREA)
