@@ -1,6 +1,5 @@
 from opencv_viewer.img_viewer import Viewer
 import cv2
-import sys
 import numpy as np
 import time
 
@@ -38,18 +37,13 @@ class VideoViewer(Viewer):
 
     def vid_show(self):
 
-        if self.n_paths < 0:
-            print('file not found')
-            return
-
         self.generate_trackbar()
 
         while True:
             cap = cv2.VideoCapture(self.get_position_path())
             if (cap.isOpened() == False):
-                print(f"Error opening {self.get_position_path()}")
                 cv2.destroyAllWindows()
-                sys.exit()
+                raise Exception(f"Error opening: {self.get_position_path()}")
 
             self.FRAME_COUNT = cap.get(cv2.CAP_PROP_FRAME_COUNT)
 
@@ -74,7 +68,6 @@ class VideoViewer(Viewer):
                     cv2.imshow(self.WINDOW, self.FRAME_LAST)
                     self.resizeWindow()
                     self.set_window_title()
-
 
                 self.key_controller.wait(time=1)
                 self.PLAY = not self.key_controller.key_check(32)  # pause with space

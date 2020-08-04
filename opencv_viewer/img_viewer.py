@@ -38,12 +38,16 @@ class Viewer:
             return [str(path)]
 
         if not path.is_dir():
-            return []
+            raise Exception(f'file not found/wrong file type: {path.absolute()}')
 
         file_paths = []
         for ext in suffix:
             for file in path.glob('*' + ext):
                 file_paths.append(str(file))
+
+        if len(file_paths) < 1:
+            raise Exception(f'no files found: {path.absolute()}')
+
         file_paths.sort()
         return file_paths
 
@@ -115,10 +119,6 @@ class Viewer:
         pass
 
     def img_show(self):
-
-        if self.n_paths < 1:
-            print('no images found')
-            return
 
         self.pre_execute()
         self.generate_trackbar()
