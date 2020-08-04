@@ -19,7 +19,6 @@ class Viewer:
 
     def __init__(self, path):
         self.paths = self.get_files_names(path)
-        self.paths.sort()
         self.n_paths = len(self.paths)
 
         self.key_controller = KeyController()
@@ -45,6 +44,7 @@ class Viewer:
         for ext in suffix:
             for file in path.glob('*' + ext):
                 file_paths.append(str(file))
+        file_paths.sort()
         return file_paths
 
     def get_param_str(self):
@@ -105,13 +105,13 @@ class Viewer:
         if hasattr(self, 'img'):
             cv2.resizeWindow(self.WINDOW, int(self.img.shape[1] * factor), int(self.img.shape[0] * factor))
 
-    def img_execute(self):
+    def img_execute(self, **kwargs):
         pass
 
-    def pre_execute(self):
+    def pre_execute(self, **kwargs):
         pass
 
-    def post_execute(self):
+    def post_execute(self, **kwargs):
         pass
 
     def img_show(self):
@@ -138,13 +138,13 @@ class Viewer:
                 break
             elif self.key_controller.key_pressed('r'):  # reload image
                 continue
-            elif self.key_controller.key_pressed('+'):  # next image
-                self.move_to_next_path()
-                continue
             elif self.key_controller.key_pressed(82):
                 self.DEFAULT_FACTOR += 0.1
             elif self.key_controller.key_pressed(84):
                 self.DEFAULT_FACTOR -= 0.1
+            elif self.key_controller.key_pressed('+'):  # next image
+                self.move_to_next_path()
+                continue
             elif self.key_controller.key_pressed('-'):  # next image
                 self.move_to_prev_path()
                 continue

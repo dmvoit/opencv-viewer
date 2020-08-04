@@ -20,6 +20,7 @@ class VideoViewer(Viewer):
     VIDEO_ENDED = False
     PLAY = True
     EXIT = False
+    NEXT_FILE = False
 
     def set_window_title(self, path=None, data=''):
         if path is None:
@@ -28,7 +29,7 @@ class VideoViewer(Viewer):
         title = f'{counter} frame: {int(self.FRAME_POS):010}\t{path}  {data}'
         cv2.setWindowTitle(self.WINDOW, title)
 
-    def resizeWindow(self, factor=None):
+    def resizeWindow(self, factor=None):  # TODO last frame resize
         if factor is None:
             factor = self.DEFAULT_FACTOR
         if hasattr(self, 'FRAME') and self.FRAME is not None:
@@ -54,7 +55,7 @@ class VideoViewer(Viewer):
 
             while True:
                 self.FRAME_POS = cap.get(cv2.CAP_PROP_POS_FRAMES)
-                if self.FRAME_POS > 0:
+                if self.FRAME_POS > 0 and self.FRAME is not None:
                     self.FRAME_LAST = self.FRAME
 
                 if self.PLAY:
@@ -66,10 +67,16 @@ class VideoViewer(Viewer):
                     cv2.imshow(self.WINDOW, self.FRAME)
                     self.resizeWindow()
                     self.set_window_title()
-                    self.img_execute()
+                    self.img_execute(next=self.NEXT_FILE)
+                    if self.NEXT_FILE is True:
+                        self.NEXT_FILE = False
+                elif self.FRAME_LAST is not None:
+                    cv2.imshow(self.WINDOW, self.FRAME_LAST)
+                    self.resizeWindow()
+                    self.set_window_title()
+
 
                 self.key_controller.wait(time=1)
-
                 self.PLAY = not self.key_controller.key_check(32)  # pause with space
 
                 if self.key_controller.key_pressed('q'):  # quit application
@@ -78,10 +85,12 @@ class VideoViewer(Viewer):
                 elif self.key_controller.key_pressed(83):  # next video arrow ->
                     self.move_to_next_path()
                     self.PLAY = True
+                    self.NEXT_FILE = True
                     break
                 elif self.key_controller.key_pressed(81):  # prev video arrow <-
                     self.move_to_prev_path()
                     self.PLAY = True
+                    self.NEXT_FILE = True
                     break
                 elif self.key_controller.key_pressed(82):
                     self.DEFAULT_FACTOR += 0.1
