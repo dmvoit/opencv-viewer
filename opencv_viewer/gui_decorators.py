@@ -8,12 +8,8 @@ class Trackbar:
         (var_name, val, max) = self.args
         Trackbar.functions[var_name] = {'fn': fn, 'val': val, 'max': max}
 
-        return fn
-
-
 class Mouse:
     functions = []
 
     def __call__(self, fn):
         Mouse.functions.append(fn)
-        return fn

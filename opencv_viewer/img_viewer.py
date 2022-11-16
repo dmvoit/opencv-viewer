@@ -1,4 +1,5 @@
 from opencv_viewer.key_controller import KeyController
+from opencv_viewer.gui_decorators import Trackbar, Mouse
 import cv2
 import pathlib
 
@@ -14,15 +15,22 @@ class Viewer:
     COLOR_WHITE = (255, 255, 255)
     COLOR_BLACK = (0, 0, 0)
 
-    position = 0
     DEFAULT_FACTOR = 0.5
 
     def __init__(self, path):
         self.paths = self.get_files_names(path)
+        self.position = 0
+
         self.n_paths = len(self.paths)
 
         self.key_controller = KeyController()
-        cv2.namedWindow(self.WINDOW, cv2.WINDOW_NORMAL | cv2.WINDOW_GUI_EXPANDED)
+        self.params_trackbar = Trackbar.functions
+        self.mouse_functions = Mouse.functions
+
+        cv2.namedWindow(self.WINDOW,
+                        cv2.WINDOW_GUI_NORMAL |
+                        cv2.WINDOW_NORMAL |
+                        cv2.WINDOW_KEEPRATIO )
 
     @staticmethod
     def get_files_names(root, suffix=None):
@@ -30,8 +38,9 @@ class Viewer:
             suffix = ['jpg', 'png']
 
         suffix = [ext if ext.startswith('.') else '.' + ext for ext in suffix]
-        suffix_upper = [ext.upper() for ext in suffix]
-        suffix = list(set(suffix).union(set(suffix_upper)))
+        # glob is case insensitive in  python 3.10
+        # suffix_upper = [ext.upper() for ext in suffix]
+        # suffix = list(set(suffix).union(set(suffix_upper)))
 
         path = pathlib.Path(root)
         if path.is_file() and path.suffix in suffix:
@@ -88,17 +97,19 @@ class Viewer:
         self.position -= 1
         self.position %= self.n_paths
 
-    def generate_trackbar(self):
-        if hasattr(self, 'PARAMS'):
-            params = getattr(self, 'PARAMS')
-            for method_name in dir(self):
-                if method_name.startswith("on_trackbar"):
-                    var_name = method_name.split('_')[-1]
-                    cv2.createTrackbar(var_name, self.WINDOW,
-                                       params[var_name]['val'], params[var_name]['max'],
-                                       getattr(self, method_name))
-                if method_name.startswith("on_mouse"):
-                    cv2.setMouseCallback(self.WINDOW, getattr(self, method_name))
+    def gen_gui(self):
+        params =self.params_trackbar
+        for var_name in params.keys():
+            cv2.createTrackbar(var_name, self.WINDOW,
+                               params[var_name]['val'],
+                               params[var_name]['max'],
+                               params[var_name]['fn'].__get__(self, self.__class__))
+        # params[var_name]['fn'].__get__(self, self.__class__) make method bound
+        # https://stackoverflow.com/questions/1015307/
+
+        for fn in self.mouse_functions:
+            cv2.setMouseCallback(self.WINDOW, fn.__get__(self, self.__class__))
+
 
     def resize(self, img, factor=0.5):
         return cv2.resize(img, None, fx=factor, fy=factor, interpolation=cv2.INTER_AREA)
@@ -121,7 +132,8 @@ class Viewer:
     def img_show(self):
 
         self.pre_execute()
-        self.generate_trackbar()
+        self.gen_gui()
+
 
         while True:
             self.img = cv2.imread(self.get_position_path())
